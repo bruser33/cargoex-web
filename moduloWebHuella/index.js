@@ -135,6 +135,9 @@ function generatePdfAndSend(nombrecliente,tns,id,correo,proceso,estado,idcliente
               var ejeylinea=100;
             }
             if(i===tns.length){
+                if(tns[i].od=== null || tns[i].od==="null"){
+                     tns[i].od=tns[i].OD_PAPEL;
+                }
                 ejextn+=200;
                 doc.fontSize(8).fillColor('black')
                     .text(chofer,ejexod,ejeyinfo)
@@ -165,7 +168,7 @@ function generatePdfAndSend(nombrecliente,tns,id,correo,proceso,estado,idcliente
                 ejeyinfo+=30;
                 ejeylinea+=30;
             }else{
-                doc.fontSize(9)
+                doc.fontSize(9).fillColor('black')
                     .text((tns[i].od+'').substring(0, 11),ejexod,ejeyinfo)
                     .text((tns[i].tn+'').substring(0, 9),ejextn,ejeyinfo)
                     .text((tns[i].guia+'').substring(0, 17),ejexguia,ejeyinfo)
@@ -236,6 +239,7 @@ app.get('/',function(llamado,respuesta){
   console.log('se hizo un llamado get');
   respuesta.send("hola desde express");
 })
+
 app.post('/clientes',function(llamado,respuesta){
   var type = llamado.header('Content-Type');
   var api = llamado.header('X-API-KEY');
@@ -265,7 +269,7 @@ app.post('/estados',function(llamado,respuesta){
   respuesta.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
   respuesta.setHeader('Access-Control-Allow-Credentials', true);
   console.log('type es'+type+'api es '+api);
-  var consulta ="SELECT * FROM ESTADOS WHERE CODIGO NOT IN (0,99) ";
+  var consulta ="SELECT * FROM ESTADOS WHERE CODIGO NOT IN (0) ";
 
     con.query(consulta, function (err, result, fields) {
     if (err) throw err;
@@ -394,7 +398,7 @@ app.post ('/mantn',function(req,res){
                           FROM\
                               ORDENES\
                           WHERE\
-                              OD_PAPEL = B.OD\
+                              OD = B.OD\
                           LIMIT 1))\
               AS CHAR) AS BULTOS,\
           (SELECT\
@@ -402,7 +406,7 @@ app.post ('/mantn',function(req,res){
               FROM\
                   ORDENES\
               WHERE\
-                  OD_PAPEL = B.OD\
+                  OD = B.OD\
               LIMIT 1) AS bultos,\
           (SELECT\
                   COUNT(*)\
@@ -429,70 +433,70 @@ app.post ('/mantn',function(req,res){
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS alto,\
           (SELECT\
                   ANCHO\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS ancho,\
           (SELECT\
                   LARGO\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS largo,\
           (SELECT\
                   NOMBRE\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS destinatario,\
           (SELECT\
                   COMUNA\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS destino,\
           (SELECT\
                   DIRECCION\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS direccion,\
           (SELECT\
                   COMUNA_ORIGEN\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS origen,\
           (SELECT\
                   PESO\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS peso,\
           (SELECT\
                   TELEFONO\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS telefono,\
       (SELECT\
                   GUIA\
               FROM\
                   ORDENES\
               WHERE\
-                  ORDENES.OD_PAPEL = B.OD\
+                  ORDENES.OD = B.OD\
               LIMIT 1) AS guia\
       FROM\
           MANIFIESTO A,\
@@ -558,6 +562,8 @@ app.post('/registrarGestion',function(llamado,respuesta){
   respuesta.setHeader('Access-Control-Allow-Credentials', true);
   var consulta ="INSERT INTO CERTIFICACIONES (OD_PAPEL,COD_CHOFER,NOMBRE,RUT,FH_GESTION,COD_ESTADO,LAT_TERRENO,LONG_TERRENO,NOTA,FOTO1,TIPO_CERTIFICACION) VALUES ('"+od+"',"+cod_chofer+",'"+nombre+"','"+rut+"','"+fecha+"','"+codigo_estado+"','"+lat+"','"+lng+"','"+nota+"','"+base64+"','"+estado+"')";
   var consulta2 = "INSERT INTO REGISTRO_INGRESOS_MANUAL (OD, ID_USUARIO) VALUES ('"+od+"',"+cod_chofer+")";
+  console.log("consulta 1 es"+consulta);
+  console.log("consulta2 es "+consulta2);
     con.query(consulta, function (err, result, fields) {
     if (err) throw err;
         con.query(consulta2, function (err, result, fields) {
@@ -650,6 +656,7 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
           var tipo_negocio = ordenes[j].tipo_negocio;
           var canal = ordenes[j].canal;
           var insertaid =  id_referencia.includes("-");
+          var papel = ordenes[j].papel;
           if(insertaid){
             var arrayreferencias = id_referencia.split("-");
             var index = arrayreferencias.length-1;
@@ -663,23 +670,23 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
                   likesql = "'"+idaux+"'";
                 }
             }
-            var consultaIDReferencia = "SELECT OD_PAPEL FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE ID_REFERENCIA IN ("+likesql+") AND COD_CLIENTE = "+idcliente ;
+            var consultaIDReferencia = "SELECT OD FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE ID_REFERENCIA IN ("+likesql+") AND COD_CLIENTE = "+idcliente ;
               con.query(consultaIDReferencia, function (err, result, fields) {
               if (err) throw err;
                 if(result.length >0){
-                  odaux=result[0].OD_PAPEL;
-                  var deleteIdreferencia = "DELETE FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE OD_PAPEL = '"+odaux+"' AND COD_CLIENTE = "+idcliente ;
+                  odaux=result[0].OD;
+                  var deleteIdreferencia = "DELETE FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE OD = '"+odaux+"' AND COD_CLIENTE = "+idcliente ;
                   con.query(deleteIdreferencia, function (err, result, fields) {
                   if (err) throw err;
                     var consultaUpdateOrden= "update ORDENES SET FH_UPDATE ='"+diaActual2+"' ,FH_DIGITACION ='"+diaActual+"' , COD_CLIENTE = "+idcliente+", ID_REFERENCIA = '"+id_referencia+"', GUIA = '"+id_referencia+"', NOMBRE = '"+nombre+"' \
                     , RUT = '"+rut+"', DIRECCION ='"+direccion+"',COMUNA ='"+comuna+"', LAT_ORIGEN='"+latitudComuna+"',LONG_ORIGEN = '"+longitudComuna+"', NOTA = '"+nota+"' \
                     , TELEFONO = '"+telefono+"', MAIL = '"+mail+"', BULTOS = '"+bultos+"', ALTO ='"+alto+"' , ANCHO= '"+ancho+"', LARGO= '"+largo+"', PESO= '"+peso+"' \
                     , TIPO_CARGA= '"+tipo_carga+"', CENTRO_COSTO='"+centro_costo+"', COD_BARRA='"+cod_barra+"', NUM_BOLETA='"+num_boleta+"', VALOR='"+valor+"', TIPO_ORDEN='"+tipo_orden+"', TIPO_NEGOCIO='"+tipo_negocio+"', CANAL='"+canal+"', COMUNA_ORIGEN='"+origen+"' \
-                      Where OD_PAPEL= '" + odaux+"' AND COD_CLIENTE = "+idcliente ;
+                      Where OD= '" + odaux+"' AND COD_CLIENTE = "+idcliente ;
                       con.query(consultaUpdateOrden, function (err, result, fields) {
                       if (err) throw err;
                       for ( var i = 0; i < arrayreferencias.length ; i++ ) {
-                        var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+arrayreferencias[i]+"','"+odaux+"','"+odaux+"','"+idcliente+"')";
+                        var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+arrayreferencias[i]+"','"+odaux+"','"+papel+"','"+idcliente+"')";
                         con.query(consulta6, function (err, result, fields) {
                         if (err) throw err;
                           });
@@ -706,12 +713,12 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
                   var consulta5 ="INSERT INTO ORDENES ( FH_DIGITACION, COD_CLIENTE, ID_REFERENCIA,GUIA, OD, OD_PAPEL, NOMBRE, RUT, DIRECCION, COMUNA, LONG_ORIGEN, LAT_ORIGEN, NOTA, \
                                 TELEFONO, MAIL, BULTOS, ALTO, ANCHO, LARGO, PESO, TIPO_CARGA, CENTRO_COSTO, TIPO_NEGOCIO, CANAL, \
                                 COD_BARRA, NUM_BOLETA, VALOR, TIPO_ORDEN, COMUNA_ORIGEN )\
-                                VALUES ( '"+diaActual+"',"+idcliente+",'"+id_referencia+"','"+id_referencia+"','"+od+"','"+od+"','"+nombre+"','"+rut+"','"+direccion+"','"+comuna+"','"+latitudComuna+"','"+longitudComuna+"','"+nota+"','"+telefono+"','"+mail+"','"+bultos+"','"+alto+"','"+ancho+"','"+largo+"','"+peso+"','"+tipo_carga+"','"+centro_costo+"','"+tipo_negocio+"','"+canal+"','"+cod_barra+"','"+num_boleta+"','"+valor+"','"+tipo_orden+"','"+origen+"')";
+                                VALUES ( '"+diaActual+"',"+idcliente+",'"+id_referencia+"','"+id_referencia+"','"+od+"','"+papel+"','"+nombre+"','"+rut+"','"+direccion+"','"+comuna+"','"+latitudComuna+"','"+longitudComuna+"','"+nota+"','"+telefono+"','"+mail+"','"+bultos+"','"+alto+"','"+ancho+"','"+largo+"','"+peso+"','"+tipo_carga+"','"+centro_costo+"','"+tipo_negocio+"','"+canal+"','"+cod_barra+"','"+num_boleta+"','"+valor+"','"+tipo_orden+"','"+origen+"')";
                                 con.query(consulta5, function (err, result, fields) {
                                 if (err) throw err;
                                     for ( var i = 0; i < arrayreferencias.length ; i++ ) {
 
-                                      var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+arrayreferencias[i]+"','"+od+"','"+od+"','"+idcliente+"')";
+                                      var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+arrayreferencias[i]+"','"+od+"','"+papel+"','"+idcliente+"')";
                                   //    console.log('consulta de insercion referencia');
                                       con.query(consulta6, function (err, result, fields) {
                                       if (err) throw err;
@@ -739,21 +746,16 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
                     });
                 })(val);
             }  */
-
-
-
-
           }else{
             var odaux ='';
-
-            var consultaIDReferencia = "SELECT OD_PAPEL FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE ID_REFERENCIA = '"+id_referencia+"' AND COD_CLIENTE = "+idcliente ;
+            var consultaIDReferencia = "SELECT OD FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE ID_REFERENCIA = '"+id_referencia+"' AND COD_CLIENTE = "+idcliente ;
             console.log(consultaIDReferencia);
             con.query(consultaIDReferencia, function (err, result, fields) {
             if (err) throw err;
             if(result.length >0){
              console.log('entro por mayor a 0 ');
               console.log(result);
-              odaux=result[0].OD_PAPEL;
+              odaux=result[0].OD;
               console.log(odaux);
               var deleteIdreferencia = "DELETE FROM ID_REFERENCIA_ORDEN_CLIENTE WHERE ID_REFERENCIA = '"+id_referencia+"' AND COD_CLIENTE = "+idcliente ;
               console.log(deleteIdreferencia);
@@ -762,13 +764,13 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
                   var consultaUpdateOrden= "update ORDENES SET FH_UPDATE ='"+diaActual2+"' ,FH_DIGITACION ='"+diaActual+"' , COD_CLIENTE = "+idcliente+", ID_REFERENCIA = '"+id_referencia+"', GUIA = '"+id_referencia+"', NOMBRE = '"+nombre+"' \
                   , RUT = '"+rut+"', DIRECCION ='"+direccion+"',COMUNA ='"+comuna+"', LAT_ORIGEN='"+latitudComuna+"',LONG_ORIGEN = '"+longitudComuna+"', NOTA = '"+nota+"' \
                   , TELEFONO = '"+telefono+"', MAIL = '"+mail+"', BULTOS = '"+bultos+"', ALTO ='"+alto+"' , ANCHO= '"+ancho+"', LARGO= '"+largo+"', PESO= '"+peso+"' \
-                  , TIPO_CARGA= '"+tipo_carga+"', CENTRO_COSTO='"+centro_costo+"', TIPO_NEGOCIO='"+tipo_negocio+"', CANAL='"+canal+"', COD_BARRA='"+cod_barra+"', NUM_BOLETA='"+num_boleta+"', VALOR='"+valor+"', TIPO_ORDEN='"+tipo_orden+"', COMUNA_ORIGEN='"+origen+"' \
-                    Where OD_PAPEL= '" + odaux+"' AND COD_CLIENTE = "+idcliente ;
+                  , TIPO_CARGA= '"+tipo_carga+"', CENTRO_COSTO='"+centro_costo+"', TIPO_NEGOCIO='"+tipo_negocio+"', CANAL='"+canal+"', COD_BARRA='"+cod_barra+"', NUM_BOLETA='"+num_boleta+"', VALOR='"+valor+"', TIPO_ORDEN='"+tipo_orden+"', COMUNA_ORIGEN='"+origen+"', OD_PAPEL='"+papel+"' \
+                    Where OD= '" + odaux+"' AND COD_CLIENTE = "+idcliente ;
                     console.log(consultaUpdateOrden);
                     con.query(consultaUpdateOrden, function (err, result, fields) {
                     if (err) throw err;
 
-                      var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+id_referencia+"','"+odaux+"','"+odaux+"','"+idcliente+"')";
+                      var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+id_referencia+"','"+odaux+"','"+papel+"','"+idcliente+"')";
                       console.log('consulta de insercion referencia');
                       console.log(consulta6);
                       con.query(consulta6, function (err, result, fields) {
@@ -786,13 +788,13 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
             var consulta5 ="INSERT INTO ORDENES ( FH_DIGITACION, COD_CLIENTE, ID_REFERENCIA, GUIA, OD, OD_PAPEL, NOMBRE, RUT, DIRECCION, COMUNA, LONG_ORIGEN, LAT_ORIGEN, NOTA, \
                           TELEFONO, MAIL, BULTOS, ALTO, ANCHO, LARGO, PESO, TIPO_CARGA, CENTRO_COSTO, TIPO_NEGOCIO, CANAL, \
                           COD_BARRA, NUM_BOLETA, VALOR, TIPO_ORDEN, COMUNA_ORIGEN )\
-                          VALUES ( '"+diaActual+"',"+idcliente+",'"+id_referencia+"','"+id_referencia+"','"+od+"','"+od+"','"+nombre+"','"+rut+"','"+direccion+"','"+comuna+"','"+latitudComuna+"','"+longitudComuna+"','"+nota+"','"+telefono+"','"+mail+"','"+bultos+"','"+alto+"','"+ancho+"','"+largo+"','"+peso+"','"+tipo_carga+"','"+centro_costo+"','"+tipo_negocio+"','"+canal+"','"+cod_barra+"','"+num_boleta+"','"+valor+"','"+tipo_orden+"','"+origen+"')";
+                          VALUES ( '"+diaActual+"',"+idcliente+",'"+id_referencia+"','"+id_referencia+"','"+od+"','"+papel+"','"+nombre+"','"+rut+"','"+direccion+"','"+comuna+"','"+latitudComuna+"','"+longitudComuna+"','"+nota+"','"+telefono+"','"+mail+"','"+bultos+"','"+alto+"','"+ancho+"','"+largo+"','"+peso+"','"+tipo_carga+"','"+centro_costo+"','"+tipo_negocio+"','"+canal+"','"+cod_barra+"','"+num_boleta+"','"+valor+"','"+tipo_orden+"','"+origen+"')";
 
             con.query(consulta5, function (err, result, fields) {
             if (err) throw err;
 
             });
-            var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+id_referencia+"','"+od+"','"+od+"','"+idcliente+"')";
+            var consulta6 = "INSERT INTO ID_REFERENCIA_ORDEN_CLIENTE (ID_REFERENCIA, OD, OD_PAPEL, COD_CLIENTE) VALUES ('"+id_referencia+"','"+od+"','"+papel+"','"+idcliente+"')";
             con.query(consulta6, function (err, result, fields) {
             if (err) throw err;
               });
@@ -818,7 +820,6 @@ app.post('/insertarOrdenes',function(llamado,respuesta){
 
 
   }
-
 });
 
 app.post('/crearOrden',function(llamado,respuesta){
@@ -967,8 +968,10 @@ app.post('/cerrarManifiestoAccesoAnden',function(llamado,respuesta){
                 if (err) throw err;
                     var data = result;
                     if(val === (bultos - 1 )){
+                        console.log(consulta3);
                         con.query(consulta3, function (err, result, fields) {
                          if (err) throw err;
+                            console.log(result);
                             var portalName = result[0].name;
                             con.query(consulta2, function (err, result, fields) {
                             if (err) throw err;
@@ -1147,7 +1150,7 @@ app.post('/manifiestos',function(llamado,respuesta){
   respuesta.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
   respuesta.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
   respuesta.setHeader('Access-Control-Allow-Credentials', true);
-  var consulta="SELECT* FROM MANIFIESTO WHERE ID_CLIENTE = '"+idcliente+"' AND SUBSTRING(FH_CIERRE, 1, 10) BETWEEN CAST('"+fechai+"' AS DATE) AND CAST('"+fechaf+"' AS DATE) AND ESTADO = 'CERRADO'";
+  var consulta="SELECT* FROM MANIFIESTO WHERE ID_CLIENTE = '"+idcliente+"' AND SUBSTRING(FH_CIERRE, 1, 10) BETWEEN CAST('"+fechai+"' AS DATE) AND CAST('"+fechaf+"' AS DATE) AND ESTADO = 'CERRADO' AND PROCESO = 'INHOUSE'";
   console.log(consulta)
   con.query(consulta, function (err, result, fields) {
   if (err) throw err;
@@ -1175,7 +1178,7 @@ app.post('/manifiestos',function(llamado,respuesta){
       var segundos= agregarUnidad(datetime.getSeconds());
       var diaActual= datetime.getFullYear() +'-'+mes+'-'+dia+' '+hora+':'+minutos+':'+segundos;
       var consulta1="SELECT NEXTVAL('TN') as tn";
-      var consulta="SELECT C.* FROM PICKING A, MANIFIESTO B, ORDENES C WHERE A.ID_MANIFIESTO = B.ID AND A.OD = C.OD AND A.ID_MANIFIESTO = "+manifiesto+" AND B.ESTADO = 'CERRADO' GROUP BY C.OD ORDER BY C.ID DESC";
+      var consulta="SELECT C.* FROM PICKING A, MANIFIESTO B, ORDENES C WHERE A.ID_MANIFIESTO = B.ID AND (A.OD = C.OD OR A.OD=C.OD_PAPEL) AND A.ID_MANIFIESTO = "+manifiesto+" AND B.ESTADO = 'CERRADO' GROUP BY A.TN ORDER BY C.ID DESC";
       console.log("antes consulta 1",consulta);
       con.query(consulta, function (err, result, fields) {
       if (err) throw err;
@@ -1183,20 +1186,20 @@ app.post('/manifiestos',function(llamado,respuesta){
        var ods = result;
        var size = ods.length;
       console.log("paso consulta 1",result.length);
-
+      console.log("resultado",ods);
        for ( var i = 0 ; i < ods.length ; i++ ) {
                tVal = i;
                var bultos = ods[i].BULTOS;
                var od = ods[i].OD;
                var numeroImpresiones = ods[i].NUMERO_IMPRESIONES_ETIQUETA + 1 ;
-               var consultaActualizacion  = "UPDATE ORDENES SET FH_IMPRESION_ETIQUETA = '"+diaActual+"',NUMERO_IMPRESIONES_ETIQUETA = "+numeroImpresiones+" WHERE OD ="+ods[i].OD ;
+               var consultaActualizacion  = "UPDATE ORDENES SET FH_IMPRESION_ETIQUETA = '"+diaActual+"',NUMERO_IMPRESIONES_ETIQUETA = "+numeroImpresiones+" WHERE OD ="+ods[i].OD_PAPEL ;
                console.log('actualizacion es');
                console.log(consultaActualizacion);
                con.query(consultaActualizacion, function (err, result, fields) {
                if (err) throw err;
              });
                (function(i,bultos,od,size){
-                 var consulta2="SELECT * FROM PICKING A, ID_REFERENCIA_ORDEN_CLIENTE B, MANIFIESTO C WHERE (B.ID_REFERENCIA = "+ods[i].OD+"   OR A.OD = "+ods[i].OD+" ) AND A.OD = B.OD_PAPEL AND A.ID_MANIFIESTO = C.ID AND C.PROCESO = 'INHOUSE' group by TN";
+                 var consulta2="SELECT * FROM PICKING A, ID_REFERENCIA_ORDEN_CLIENTE B, MANIFIESTO C WHERE (B.ID_REFERENCIA = "+ods[i].OD_PAPEL+"   OR A.OD = "+ods[i].OD_PAPEL+" ) AND A.OD = B.OD_PAPEL AND A.ID_MANIFIESTO = C.ID AND C.PROCESO = 'INHOUSE' group by TN";
               //   console.log(consulta2);
                  con.query(consulta2, function (err, result, fields) {
                  if (err) throw err;
@@ -1416,8 +1419,9 @@ app.post('/getTn',function(llamado,respuesta){
   var api = llamado.header('X-API-KEY');
   var bultos = llamado.body.bultos;
   var od = llamado.body.od;
-  console.log('od de servicio es');
+  console.log('od de servicio en tn ');
   console.log(od);
+  console.log("body",llamado);
   var idcliente = llamado.body.idcliente;
   var manifiesto = llamado.body.manifiesto;
   respuesta.setHeader('Access-Control-Allow-Origin', '*');
