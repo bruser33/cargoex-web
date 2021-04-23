@@ -19,15 +19,15 @@ var transporter = nodemailer.createTransport({
  service: 'gmail',
  auth: {
         user: 'infocargoex@gmail.com',
-        pass: 'maraton1400'
+        pass: 'maraton140000'
     }
 });
 
 var con = mysql.createConnection({
-  host: "cargoex.cizzeryayehn.us-east-2.rds.amazonaws.com",
-  database:"cargoEX",
-  user: "root",
-  password: "cargoEX.2018!"
+  host: "database-1.c0xqcoje0sna.us-west-1.rds.amazonaws.com",
+  database:"scbExpress",
+  user: "admin",
+  password: "shinigami1"
 });
 function predicateBy(prop){
     return function(a,b){
@@ -359,6 +359,39 @@ console.log(consulta);
 
 });
 
+app.post('/login',function(llamado,respuesta){
+    var user = llamado.body.user;
+    var pass = llamado.body.pass;
+    console.log('llego a logear',user+"---"+pass);
+    respuesta.setHeader('Access-Control-Allow-Origin', '*');
+    respuesta.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    respuesta.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    respuesta.setHeader('Access-Control-Allow-Credentials', true);
+
+    var consulta ="SELECT COD_CHOFER, NOMBRE, RUT FROM CHOFERES WHERE RUT='"+user+"' AND PASSWORD ='"+pass+"'";
+    var consulta2 ="SELECT * from ESTADOS";
+    var consulta3 ="SELECT * from CLIENTES";
+
+    con.query(consulta, function (err, result, fields) {
+        if (err) throw err;
+        console.log(result);
+        if(result.length >0) {
+            con.query(consulta2, function (err, result2, fields) {
+                if (err) throw err;
+                con.query(consulta3, function (err, result3, fields) {
+                    if (err) throw err;
+                    console.log({status : true,  data: result[0],estados:result2,clientes:result3});
+                    respuesta.send({status : true,  data: result[0],estados:result2,clientes:result3});;
+                    respuesta.end();
+                });
+            });
+        }else{
+            respuesta.send( false);;
+            respuesta.end();
+        }
+    });
+
+});
 app.post ('/mantn',function(req,res){
 
          var type = req.header('Content-Type');
