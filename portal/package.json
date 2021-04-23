@@ -9,7 +9,7 @@
     "cors": "^2.8.5",
     "eslint": "^5.6.0",
     "google-maps-react": "^2.0.2",
-    "jspdf": "^1.5.3",
+    "jspdf": "^2.3.1",
     "pdfkit": "^0.9.0",
     "react": "^16.6.3",
     "react-autocomplete": "^1.8.1",
